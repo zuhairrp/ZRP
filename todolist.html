@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>To Do List</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, sans-serif;
+      background: #f5f5f3;
+      color: #1a1a18;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 3rem 1rem;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 520px;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 500;
+      margin-bottom: 1.5rem;
+      color: #1a1a18;
+    }
+
+    .add-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 1.5rem;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      height: 36px;
+      padding: 0 12px;
+      font-size: 15px;
+      border: 0.5px solid #ccc;
+      border-radius: 8px;
+      outline: none;
+      background: #fff;
+      color: #1a1a18;
+      transition: box-shadow 0.15s;
+    }
+
+    input[type="text"]:focus {
+      box-shadow: 0 0 0 2px #1D9E75;
+      border-color: #1D9E75;
+    }
+
+    button {
+      cursor: pointer;
+      background: #fff;
+      border: 0.5px solid #bbb;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #1a1a18;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 0 14px;
+      height: 36px;
+      transition: background 0.1s, transform 0.1s;
+    }
+
+    button:hover { background: #f0f0ee; }
+    button:active { transform: scale(0.98); }
+
+    .filters {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      border-radius: 999px;
+      font-size: 13px;
+      padding: 4px 12px;
+      height: auto;
+    }
+
+    .filter-btn.active {
+      background: #e8e8e6;
+      border-color: #888;
+      font-weight: 500;
+    }
+
+    #task-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .task-item {
+      background: #fff;
+      border: 0.5px solid #ddd;
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: opacity 0.15s;
+    }
+
+    .task-item.done { opacity: 0.5; }
+
+    .task-check {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 1.5px solid #bbb;
+      appearance: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+      flex-shrink: 0;
+      position: relative;
+      transition: background 0.12s, border-color 0.12s;
+    }
+
+    .task-check:checked {
+      background: #1D9E75;
+      border-color: #1D9E75;
+    }
+
+    .task-check:checked::after {
+      content: '';
+      position: absolute;
+      left: 4px;
+      top: 1.5px;
+      width: 5px;
+      height: 9px;
+      border: 2px solid white;
+      border-top: none;
+      border-left: none;
+      transform: rotate(45deg);
+    }
+
+    .task-label {
+      flex: 1;
+      font-size: 15px;
+      color: #1a1a18;
+      word-break: break-word;
+    }
+
+    .task-item.done .task-label {
+      text-decoration: line-through;
+      color: #999;
+    }
+
+    .del-btn {
+      background: none;
+      border: none;
+      color: #aaa;
+      cursor: pointer;
+      padding: 2px 4px;
+      height: auto;
+      opacity: 0;
+      transition: opacity 0.1s, color 0.1s;
+    }
+
+    .task-item:hover .del-btn { opacity: 1; }
+    .del-btn:hover { color: #c0392b !important; background: none; }
+
+    .footer {
+      margin-top: 1.25rem;
+      padding-top: 1rem;
+      border-top: 0.5px solid #ddd;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      color: #888;
+    }
+
+    .empty-msg {
+      text-align: center;
+      color: #aaa;
+      font-size: 14px;
+      padding: 2rem 0;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>My To Do List</h1>
+
+  <div class="add-row">
+    <input type="text" id="task-input" placeholder="Add a new task…" />
+    <button id="add-btn" aria-label="Add task">
+      <i class="ti ti-plus" aria-hidden="true"></i> Add
+    </button>
+  </div>
+
+  <div class="filters">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="active">Active</button>
+    <button class="filter-btn" data-filter="done">Done</button>
+  </div>
+
+  <ul id="task-list"></ul>
+
+  <div class="footer" id="footer" style="display: none;">
+    <span id="count-label"></span>
+    <button id="clear-btn" style="font-size: 13px; padding: 4px 10px; color: #888;">Clear done</button>
+  </div>
+</div>
+
+<script>
+  const tasks = [
+    { id: 1, text: 'Buy groceries', done: false },
+    { id: 2, text: 'Read for 20 minutes', done: false },
+    { id: 3, text: 'Call mom', done: true },
+  ];
+  let nextId = 4;
+  let filter = 'all';
+
+  const listEl = document.getElementById('task-list');
+  const inputEl = document.getElementById('task-input');
+  const countEl = document.getElementById('count-label');
+  const footerEl = document.getElementById('footer');
+
+  function render() {
+    const visible = tasks.filter(t =>
+      filter === 'all' ? true : filter === 'done' ? t.done : !t.done
+    );
+    listEl.innerHTML = '';
+    if (visible.length === 0) {
+      listEl.innerHTML = `<li class="empty-msg">No tasks here yet.</li>`;
+    }
+    visible.forEach(t => {
+      const li = document.createElement('li');
+      li.className = 'task-item' + (t.done ? ' done' : '');
+      li.innerHTML = `
+        <input type="checkbox" class="task-check" ${t.done ? 'checked' : ''} data-id="${t.id}" aria-label="Mark done" />
+        <span class="task-label">${escapeHtml(t.text)}</span>
+        <button class="del-btn" data-id="${t.id}" aria-label="Delete task"><i class="ti ti-trash" style="font-size:16px;"></i></button>
+      `;
+      listEl.appendChild(li);
+    });
+    const active = tasks.filter(t => !t.done).length;
+    countEl.textContent = `${active} task${active !== 1 ? 's' : ''} left`;
+    footerEl.style.display = tasks.length ? 'flex' : 'none';
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function addTask() {
+    const text = inputEl.value.trim();
+    if (!text) return;
+    tasks.unshift({ id: nextId++, text, done: false });
+    inputEl.value = '';
+    render();
+  }
+
+  document.getElementById('add-btn').addEventListener('click', addTask);
+  inputEl.addEventListener('keydown', e => { if (e.key === 'Enter') addTask(); });
+
+  listEl.addEventListener('change', e => {
+    if (e.target.classList.contains('task-check')) {
+      const id = +e.target.dataset.id;
+      const t = tasks.find(t => t.id === id);
+      if (t) { t.done = e.target.checked; render(); }
+    }
+  });
+
+  listEl.addEventListener('click', e => {
+    const btn = e.target.closest('.del-btn');
+    if (btn) {
+      const id = +btn.dataset.id;
+      const idx = tasks.findIndex(t => t.id === id);
+      if (idx !== -1) { tasks.splice(idx, 1); render(); }
+    }
+  });
+
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      filter = btn.dataset.filter;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      render();
+    });
+  });
+
+  document.getElementById('clear-btn').addEventListener('click', () => {
+    for (let i = tasks.length - 1; i >= 0; i--) {
+      if (tasks[i].done) tasks.splice(i, 1);
+    }
+    render();
+  });
+
+  render();
+</script>
+
+</body>
+</html>
